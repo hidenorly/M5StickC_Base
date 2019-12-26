@@ -35,7 +35,7 @@ class ManualCursorPoller:public LooperThreadTicker
     virtual ~ManualCursorPoller(){
     }
 
-    virtual void doCallback(void)
+     void doCallback(void)
     {
       static bool bLastPowerStatus = mpPowerControl->getPowerStatus();
       M5.update();
@@ -63,12 +63,13 @@ void setup() {
 
   // Initialize GPIO
   initializeGPIO();
-  
+
   // Initialize LCD
   M5.Lcd.fillScreen(BLACK);
 
   GpioDetector* pHumanDetector = new GpioDetector(HUMAN_DETCTOR_PIN, true, HUMAN_UNDETECT_TIMEOUT);
-  PowerControl* pPowerControl = new PowerControl(new IrRemoteController(IR_SEND_PIN, KEYIrCodes)); // defined in config.cpp
+  static IrRemoteController remoteController(IR_SEND_PIN, KEYIrCodes);
+  PowerControl* pPowerControl = new PowerControl(&remoteController); // defined in config.cpp
   PowerControlPoller* pPowerControllerPoller = new PowerControlPoller(pPowerControl, pHumanDetector, HUMAN_UNDETECT_TIMEOUT, HUMAN_POLLING_PERIOD);
   if(pPowerControllerPoller){
     g_LooperThreadManager.add(pPowerControllerPoller);
@@ -81,6 +82,5 @@ void setup() {
 }
 
 void loop() {
-  // Poller
   g_LooperThreadManager.handleLooperThread();
 }

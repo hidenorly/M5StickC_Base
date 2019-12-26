@@ -37,7 +37,6 @@ void PowerControlPoller::doCallback(void)
     static bool decidedPower = false;
     static unsigned long lastHumanDetected = 0;
 
-    bool curPowerStatus = mpPowerControl->getPowerStatus();
     bool curHumanStatus = mpHumanDetector->getStatus();
 
     DEBUG_PRINT("Human ");

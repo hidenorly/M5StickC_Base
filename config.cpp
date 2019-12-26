@@ -31,7 +31,7 @@ const int IR_SEND_PIN = 32; // Use 9 if you want to use M5StickC's Ir LED
 KEYIRCODE KEYIrCodes[] = {
   {IRemoteController::KEY_POWER_ON, 0x41B6659AUL},
   {IRemoteController::KEY_POWER_OFF, 0x41B67D82UL},
-  {NULL, NULL}
+  {(int)NULL, (uint64_t)NULL}
 };
 
 

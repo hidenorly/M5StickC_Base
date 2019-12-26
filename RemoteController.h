@@ -34,7 +34,7 @@ public:
 typedef struct KeyIrCode
 {
   int keyCode;
-  uint64_t code;
+  uint64_t irCode;
 } KEYIRCODE;
 
 
