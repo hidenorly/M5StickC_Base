@@ -67,15 +67,15 @@ void setup() {
   // Initialize LCD
   M5.Lcd.fillScreen(BLACK);
 
-  GpioDetector* pHumanDetector = new GpioDetector(HUMAN_DETCTOR_PIN, true, HUMAN_UNDETECT_TIMEOUT);
+  static GpioDetector humanDetector(HUMAN_DETCTOR_PIN, true, HUMAN_UNDETECT_TIMEOUT);
   static IrRemoteController remoteController(IR_SEND_PIN, KEYIrCodes);
-  PowerControl* pPowerControl = new PowerControl(&remoteController); // defined in config.cpp
-  PowerControlPoller* pPowerControllerPoller = new PowerControlPoller(pPowerControl, pHumanDetector, HUMAN_UNDETECT_TIMEOUT, HUMAN_POLLING_PERIOD);
+  static PowerControl powerControl(&remoteController); // defined in config.cpp
+  PowerControlPoller* pPowerControllerPoller = new PowerControlPoller(&powerControl, &humanDetector, HUMAN_UNDETECT_TIMEOUT, HUMAN_POLLING_PERIOD);
   if(pPowerControllerPoller){
     g_LooperThreadManager.add(pPowerControllerPoller);
   }
 
-  ManualCursorPoller* pManualCursorPoller = new ManualCursorPoller(pPowerControl, 100);
+  ManualCursorPoller* pManualCursorPoller = new ManualCursorPoller(&powerControl, BTN_POLLING_PERIOD);
   if(pManualCursorPoller){
     g_LooperThreadManager.add(pManualCursorPoller);
   }

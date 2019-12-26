@@ -19,9 +19,12 @@
 
 // --- GPIO config
 extern const int HUMAN_DETCTOR_PIN;
+extern const int IR_SEND_PIN;
+
+// -- params
 extern const int HUMAN_UNDETECT_TIMEOUT;
 extern const int HUMAN_POLLING_PERIOD;
-extern const int IR_SEND_PIN;
+extern const int BTN_POLLING_PERIOD;
 
 #include "RemoteController.h"
 extern KEYIRCODE KEYIrCodes[];

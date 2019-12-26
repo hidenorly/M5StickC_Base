@@ -22,7 +22,7 @@
 
 // --- config
 const int HUMAN_DETCTOR_PIN = GpioDetector::GPIO_G36;
-const int HUMAN_UNDETECT_TIMEOUT=1000*60*1; // 1min
+const int HUMAN_UNDETECT_TIMEOUT=1000*60*3; // 3min
 const int HUMAN_POLLING_PERIOD=1000; // polling per 1 sec
 
 const int BTN_POLLING_PERIOD=100; // polling per 100msec

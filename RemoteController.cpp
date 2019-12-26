@@ -20,9 +20,9 @@
 
 IrRemoteController::IrRemoteController(int irPort, KEYIRCODE keys[])
 {
-  IRsend* mIRsend = new IRsend(irPort);
+  mIRsend = new IRsend(irPort);
   if( mIRsend ){
-    DEBUG_PRINTLN("IRsend.begin()");
+//    DEBUG_PRINTLN("IRsend.begin()");
     mIRsend->begin();
   }
   mpKeys = keys;
@@ -38,10 +38,6 @@ IrRemoteController::~IrRemoteController()
 
 void IrRemoteController::sendKey(int keyCode)
 {
-  DEBUG_PRINT("void IrRemoteController::sendKey(");
-  DEBUG_PRINT(keyCode);
-  DEBUG_PRINTLN(")");
-
   if(mpKeys && mIRsend){
     KEYIRCODE* pKeys = mpKeys;
     while( pKeys->keyCode != (int)NULL ){
