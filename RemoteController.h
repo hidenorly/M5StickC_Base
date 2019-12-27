@@ -35,6 +35,8 @@ typedef struct KeyIrCode
 {
   int keyCode;
   uint64_t irCode;
+  int repeatCount;
+  int repeatDelay;
 } KEYIRCODE;
 
 

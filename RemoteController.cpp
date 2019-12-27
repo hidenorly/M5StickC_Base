@@ -42,7 +42,10 @@ void IrRemoteController::sendKey(int keyCode)
     KEYIRCODE* pKeys = mpKeys;
     while( pKeys->keyCode != (int)NULL ){
       if( pKeys->keyCode == keyCode ){
-        mIRsend->sendNEC(pKeys->irCode);
+        for(int i=0; i<pKeys->repeatCount; i++){
+          mIRsend->sendNEC(pKeys->irCode);
+          delay(pKeys->repeatDelay);
+        }
       }
       pKeys++;
     }
