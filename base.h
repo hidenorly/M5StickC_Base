@@ -14,10 +14,10 @@
  limitations under the License.
 */
 
+#include <M5StickC.h>
+
 #ifndef __BASE_H__
 #define __BASE_H__
-
-#include <M5StickC.h>
 
 // --- debug macro
 #define ENABLE_DEBUG 1

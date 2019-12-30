@@ -17,6 +17,18 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+// --- config: WIFI
+extern const char* WIFI_CONFIG;
+extern const char* WIFIAP_PASSWORD;
+
+// --- config: NTP
+extern const char* NTP_SERVER;
+extern const int NTP_TIMEZONE_OFFSET;
+
+// --- config: httpd
+extern int HTTP_SERVER_PORT;
+extern const char* HTML_HEAD;
+
 // --- GPIO config
 extern const int HUMAN_DETCTOR_PIN;
 extern const int IR_SEND_PIN;

@@ -20,6 +20,20 @@
 #include "GpioDetector.h"
 #include "RemoteController.h"
 
+// --- config: WIFI
+const char* WIFI_CONFIG = "/wifi_config";
+const char* WIFIAP_PASSWORD = "esp32wifi"; // you can see WiFi Mac Address's SSID and this is password for setup SSID/Password from web.
+
+// --- config: NTP
+const char* NTP_SERVER = "ntp.nict.jp";
+const int NTP_TIMEZONE_OFFSET = 9;
+
+
+// --- config: httpd
+int HTTP_SERVER_PORT = 80;
+const char* HTML_HEAD = "<html><head><title>hidenorly's M5StickC</title></head><body>";
+
+
 // --- config
 const int HUMAN_DETCTOR_PIN = GpioDetector::GPIO_G36;
 const int HUMAN_UNDETECT_TIMEOUT=1000*60*3; // 3min
