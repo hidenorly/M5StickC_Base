@@ -34,25 +34,34 @@ bool initializeProperMode(bool bSPIFFS){
 
   if( !bSPIFFS || M5.BtnA.wasPressed() || (!SPIFFS.exists(WIFI_CONFIG))){
     // setup because WiFi AP mode is specified or WIFI_CONFIG is not found.
-    setupWiFiAP();
+    WiFiUtil::setupWiFiAP();
     setup_httpd();
     return false;
   } else {
-    setupWiFiClient();
+    WiFiUtil::setupWiFiClient();
   }
   return true;
 }
 
 // --- handler for WiFi client enabled
-void onWiFiClientConnected(){
-  DEBUG_PRINTLN("WiFi connected.");
-  DEBUG_PRINT("IP address: ");
-  DEBUG_PRINTLN(WiFi.localIP());
+class MyNetHandler
+{
+  protected:
+    static void onWiFiClientConnected(void* pArg){
+      DEBUG_PRINTLN("WiFi connected.");
+      DEBUG_PRINT("IP address: ");
+      DEBUG_PRINTLN(WiFi.localIP());
 
-  setup_httpd();  // comment this out if you don't need to have httpd on WiFi client mode
-  configTime(NTP_TIMEZONE_OFFSET * 3600L, 0, NTP_SERVER);
-}
+      setup_httpd();  // comment this out if you don't need to have httpd on WiFi client mode
+      configTime(NTP_TIMEZONE_OFFSET * 3600L, 0, NTP_SERVER);
+    }
 
+  public:
+    static void setup(void)
+    {
+      WiFiUtil::setStatusCallback(onWiFiClientConnected, NULL);
+    }
+};
 
 
 class SwitchBtnPoller:public LooperThreadTicker
@@ -148,6 +157,7 @@ void setup() {
     g_LooperThreadManager.add(sPoll);
   }
 
+  MyNetHandler::setup();
 
   static GpioDetector humanDetector(HUMAN_DETCTOR_PIN, true, HUMAN_UNDETECT_TIMEOUT);
   static IrRemoteController remoteController(IR_SEND_PIN, KEYIrCodes);
@@ -165,7 +175,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  handleWiFiClientStatus();
+  WiFiUtil::handleWiFiClientStatus();
   handleWebServer();
   g_LooperThreadManager.handleLooperThread();
 }

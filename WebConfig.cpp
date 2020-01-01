@@ -70,7 +70,7 @@ void httpd_handleRootPost() {
       html += HTML_TAIL;
       g_pHttpd->send(200, "text/html", html);
     } else {
-      saveWiFiConfig(ssid, pass);
+      WiFiUtil::saveWiFiConfig(ssid, pass);
     }
     
     String html = HTML_HEAD;

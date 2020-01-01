@@ -20,19 +20,15 @@
 
 #include <Ticker.h>
 #include <WiFi.h>
-#include <WiFiAP.h>
-#include <WiFiGeneric.h>
-#include <WiFiMulti.h>
-#include <WiFiScan.h>
-#include <WiFiSTA.h>
-#include <WiFiType.h>
-#include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include <WiFiServer.h>
-#include <WiFiUdp.h>
 #include <SPIFFS.h>
 
-String getDefaultSSID(){
+CALLBACK_FUNC WiFiUtil::mspCallback = NULL;
+void* WiFiUtil::mspArg = NULL;
+Ticker WiFiUtil::msWifiStatusTracker;
+volatile bool WiFiUtil::msbNetworkConnected = false;
+
+String WiFiUtil::getDefaultSSID(void)
+{
   byte mac[6];
   WiFi.macAddress(mac);
   String ssid = "";
@@ -42,7 +38,8 @@ String getDefaultSSID(){
   return ssid;
 }
 
-void setupWiFiAP(){
+void WiFiUtil::setupWiFiAP(void)
+{
   String ssid = getDefaultSSID();
   DEBUG_PRINTLN("SSID: " + ssid);
   DEBUG_PRINT("PASS: ");
@@ -61,7 +58,8 @@ void setupWiFiAP(){
 
 }
 
-void saveWiFiConfig(String ssid, String pass){
+void WiFiUtil::saveWiFiConfig(String ssid, String pass)
+{
   if( ssid!="" && pass!="" ) {
     if ( SPIFFS.exists(WIFI_CONFIG) ) {
       SPIFFS.remove(WIFI_CONFIG);
@@ -74,7 +72,8 @@ void saveWiFiConfig(String ssid, String pass){
   }
 }
 
-void loadWiFiConfig(String& ssid, String& pass){
+void WiFiUtil::loadWiFiConfig(String& ssid, String& pass)
+{
   File f = SPIFFS.open(WIFI_CONFIG, "r");
   ssid = f.readStringUntil('\n');
   pass = f.readStringUntil('\n');
@@ -84,10 +83,8 @@ void loadWiFiConfig(String& ssid, String& pass){
   pass.trim();
 }
 
-volatile int g_bNetworkConnected = false;
-void setupWiFiStatusTracker();
-
-void setupWiFiClient() {
+void WiFiUtil::setupWiFiClient(void)
+{
   String ssid="";
   String pass="";
   loadWiFiConfig(ssid, pass);
@@ -95,7 +92,7 @@ void setupWiFiClient() {
   DEBUG_PRINTLN("SSID: " + ssid);
   DEBUG_PRINTLN("PASS: " + pass);
 
-  g_bNetworkConnected = false;
+  msbNetworkConnected = false;
 
   delay(100);
   WiFi.begin(ssid.c_str(), pass.c_str());
@@ -104,22 +101,44 @@ void setupWiFiClient() {
   setupWiFiStatusTracker();
 }
 
-void onWiFiClientConnected();
-// this function should be called in loop()
-void handleWiFiClientStatus(){
+void WiFiUtil::setupWiFiStatusTracker(void)
+{
+  static int bInitialized = false;
+  if( !bInitialized ) {
+    msWifiStatusTracker.attach_ms<CTrackerParam*>(500, WiFiUtil::checkWiFiStatus, NULL);
+    bInitialized = true;
+  }
+}
+
+void WiFiUtil::handleWiFiClientStatus(void)
+{
   volatile static int bPreviousNetworkConnected = false;
-  if( bPreviousNetworkConnected != g_bNetworkConnected ){
-    bPreviousNetworkConnected = g_bNetworkConnected;
-    if ( g_bNetworkConnected ) {
+  if( bPreviousNetworkConnected != msbNetworkConnected ){
+    bPreviousNetworkConnected = msbNetworkConnected;
+    if ( msbNetworkConnected ) {
       // network is connected!
-      onWiFiClientConnected();
+      if(mspCallback){
+        mspCallback(mspArg);
+      }
     }
   }
 }
 
-Ticker g_WifiStatusTracker;
+void WiFiUtil::setStatusCallback(CALLBACK_FUNC pFunc, void* pArg)
+{
+  mspCallback = pFunc;
+  mspArg = pArg;
+}
 
-void checkWiFiStatus(CTrackerParam* p){
+void WiFiUtil::clearStatusCallback(void)
+{
+  mspCallback = NULL;
+  mspArg = NULL;
+}
+
+
+void WiFiUtil::checkWiFiStatus(CTrackerParam* p)
+{
   static int previousStatus = WL_DISCONNECTED; //WL_IDLE_STATUS;
   int curStatus = WiFi.status();
   if( previousStatus == curStatus) {
@@ -128,7 +147,7 @@ void checkWiFiStatus(CTrackerParam* p){
     previousStatus = curStatus;
     switch (curStatus) {
       case WL_CONNECTED:
-        g_bNetworkConnected = true;
+        msbNetworkConnected = true;
         break;
       case WL_CONNECT_FAILED:
       case WL_CONNECTION_LOST:
@@ -138,12 +157,5 @@ void checkWiFiStatus(CTrackerParam* p){
       default:;
         break;
     }
-  }
-}
-
-void setupWiFiStatusTracker(){
-  static int bInitialized = false;
-  if( !bInitialized ) {
-    g_WifiStatusTracker.attach_ms<CTrackerParam*>(500, checkWiFiStatus, NULL);
   }
 }
