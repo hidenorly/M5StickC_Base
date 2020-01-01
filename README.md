@@ -9,7 +9,8 @@ This supports
  * Show On/Off status through LCD
  * Manually turn On/Off by M5 Switch
  * For improving availability, sending Ir few times (the count is configurable)
- * Will be added to show NTP synced time
+ * Show NTP synced time
+ * WebConfig
 
 # HW Config
 
@@ -56,3 +57,7 @@ You can install the following libraries from Manage Library in Arduino IDE.
 
 * M5StickC library
 * Esp8266IrRemote library
+
+# Configure SSID/Password
+
+Please access to M5StickC's Mac Address with "esp32-wifi" and open browser at 192.168.10.1 to configure them.

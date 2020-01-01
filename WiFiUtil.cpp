@@ -27,6 +27,9 @@ void* WiFiUtil::mspArg = NULL;
 Ticker WiFiUtil::msWifiStatusTracker;
 volatile bool WiFiUtil::msbNetworkConnected = false;
 
+#define DEFAULT_IPADDR ip(192, 168, 10, 1)
+#define DEFAULT_SUBMASK subnet(255, 255, 255, 0)
+
 String WiFiUtil::getDefaultSSID(void)
 {
   byte mac[6];
@@ -49,13 +52,12 @@ void WiFiUtil::setupWiFiAP(void)
   delay(100);
   WiFi.softAP(ssid.c_str(), WIFIAP_PASSWORD);
   delay(100);
-  const IPAddress ip(192, 168, 10, 1);
-  const IPAddress subnet(255, 255, 255, 0);
+  const IPAddress DEFAULT_IPADDR;
+  const IPAddress DEFAULT_SUBMASK;
   WiFi.softAPConfig(ip, ip, subnet);
   IPAddress myIP = WiFi.softAPIP();
   DEBUG_PRINT("AP IP address: ");
   DEBUG_PRINTLN(myIP);
-
 }
 
 void WiFiUtil::saveWiFiConfig(String ssid, String pass)

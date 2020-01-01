@@ -85,7 +85,6 @@ class SwitchBtnPoller:public LooperThreadTicker
       }
       bool curPowerStatus = mpPowerControl->getPowerStatus();
       if(bLastPowerStatus != curPowerStatus){
-        M5.Lcd.setRotation(3);
         M5.Lcd.fillScreen(BLACK);
         M5.Lcd.setCursor(0, 8);
         M5.Lcd.setTextSize(7);
@@ -104,13 +103,14 @@ class TimePoller:public LooperThreadTicker
     }
 
   protected:
-    const int NTP_SYNC_DURATION = 900; //15min;
+    const int NTP_SYNC_DURATION = 60*60;            // 1 hour
+    const int NTP_SYNC_DURATION_NOT_SYNCED = 60*3;  // 3min
 
-    void syncTime(void)
+    void syncTime(bool bRapidSynced)
     {
       static int i=0;
       i++;
-      if((i % NTP_SYNC_DURATION) == 0){
+      if(i % (bRapidSynced ? NTP_SYNC_DURATION_NOT_SYNCED : NTP_SYNC_DURATION) == 0){
         configTime(NTP_TIMEZONE_OFFSET * 3600L, 0, NTP_SERVER);
       }
     }
@@ -119,15 +119,29 @@ class TimePoller:public LooperThreadTicker
     {
       struct tm timeInfo;
       char s[20];
+      static String lastMessage;
 
       getLocalTime(&timeInfo);
+
+      // setup message for log
       sprintf(s, "%04d/%02d/%02d %02d:%02d:%02d",
               timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
               timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
-    
       DEBUG_PRINTLN(s);
 
-      syncTime();
+      // setup message for LCD
+      sprintf(s, " %02d/%02d\n %02d:%02d",
+              timeInfo.tm_mon + 1, timeInfo.tm_mday,
+              timeInfo.tm_hour, timeInfo.tm_min);
+      if( !lastMessage.equals(s) ){
+        lastMessage = s;
+        M5.Lcd.fillScreen(BLACK);
+        M5.Lcd.setCursor(0, 8);
+        M5.Lcd.setTextSize(4);
+        M5.Lcd.print(s);
+      }
+
+      syncTime( (timeInfo.tm_year==1970) );
   }
 };
 
@@ -142,6 +156,7 @@ void setup() {
   initializeGPIO();
 
   // Initialize LCD
+  M5.Lcd.setRotation(3);
   M5.Lcd.fillScreen(BLACK);
 
   // Initialize SPI File System
