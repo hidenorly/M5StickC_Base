@@ -35,7 +35,7 @@ bool initializeProperMode(bool bSPIFFS){
   if( !bSPIFFS || M5.BtnA.wasPressed() || (!SPIFFS.exists(WIFI_CONFIG))){
     // setup because WiFi AP mode is specified or WIFI_CONFIG is not found.
     WiFiUtil::setupWiFiAP();
-    setup_httpd();
+    WebConfig::setup_httpd();
     return false;
   } else {
     WiFiUtil::setupWiFiClient();
@@ -52,7 +52,7 @@ class MyNetHandler
       DEBUG_PRINT("IP address: ");
       DEBUG_PRINTLN(WiFi.localIP());
 
-      setup_httpd();  // comment this out if you don't need to have httpd on WiFi client mode
+      WebConfig::setup_httpd();  // comment this out if you don't need to have httpd on WiFi client mode
       configTime(NTP_TIMEZONE_OFFSET * 3600L, 0, NTP_SERVER);
     }
 
@@ -176,6 +176,6 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   WiFiUtil::handleWiFiClientStatus();
-  handleWebServer();
+  WebConfig::handleWebServer();
   g_LooperThreadManager.handleLooperThread();
 }

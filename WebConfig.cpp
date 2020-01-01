@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2016, 2018 hidenorly
+ Copyright (C) 2016, 2018, 2019 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -24,26 +24,26 @@
 #include <SPIFFS.h>
 
 // --- HTTP server related
-static WebServer* g_pHttpd = NULL; // http server for WiFi AP Mode
+WebServer* WebConfig::mpHttpd = NULL; // http server for WiFi AP Mode
+const char* const WebConfig::HTML_TAIL = "</body></html>";
 
-char* HTML_TAIL = "</body></html>";
 
-void httpd_handleRootGet(void);
-void httpd_handleRootPost(void);
 
-void setup_httpd() {
-  if( g_pHttpd == NULL ){
-    g_pHttpd = new WebServer(HTTP_SERVER_PORT);
+void WebConfig::setup_httpd(void)
+{
+  if( mpHttpd == NULL ){
+    mpHttpd = new WebServer(HTTP_SERVER_PORT);
   }
-  g_pHttpd->on("/", HTTP_GET, httpd_handleRootGet);
-  g_pHttpd->on("/", HTTP_POST, httpd_handleRootPost);
-  g_pHttpd->begin();
+  mpHttpd->on("/", HTTP_GET, httpd_handleRootGet);
+  mpHttpd->on("/", HTTP_POST, httpd_handleRootPost);
+  mpHttpd->begin();
   DEBUG_PRINTLN("HTTP server started.");
 }
 
-void httpd_handleRootGet() {
+void WebConfig::httpd_handleRootGet(void)
+{
   DEBUG_PRINTLN("Receive: GET /");
-  if (g_pHttpd != NULL) {
+  if (mpHttpd != NULL) {
     String html = HTML_HEAD;
     html += "<h1>WiFi/Power Control Settings</h1>";
     html += "<form method='post'>";
@@ -52,15 +52,16 @@ void httpd_handleRootGet() {
     html += "  <input type='submit'><br>";
     html += "</form>";
     html += HTML_TAIL;
-    g_pHttpd->send(200, "text/html", html);
+    mpHttpd->send(200, "text/html", html);
   }
 }
 
-void httpd_handleRootPost() {
+void WebConfig::httpd_handleRootPost(void)
+{
   DEBUG_PRINTLN("Receive: POST /");
-  if( g_pHttpd != NULL ){
-    String ssid = g_pHttpd->arg("ssid");
-    String pass = g_pHttpd->arg("pass");
+  if( mpHttpd != NULL ){
+    String ssid = mpHttpd->arg("ssid");
+    String pass = mpHttpd->arg("pass");
   
     // --- SSID & Password are specified.
     if( (ssid=="format") && (pass=="format") ){
@@ -68,7 +69,7 @@ void httpd_handleRootPost() {
       String html = HTML_HEAD;
       html += "Format successful on SPIFFS!";
       html += HTML_TAIL;
-      g_pHttpd->send(200, "text/html", html);
+      mpHttpd->send(200, "text/html", html);
     } else {
       WiFiUtil::saveWiFiConfig(ssid, pass);
     }
@@ -79,7 +80,7 @@ void httpd_handleRootPost() {
     html += ((pass!="") ? pass : "password isn't changed") + "<br>";
     html += HTML_TAIL;
 
-    g_pHttpd->send(200, "text/html", html);
+    mpHttpd->send(200, "text/html", html);
 
     delay(1000*3);
 
@@ -87,8 +88,9 @@ void httpd_handleRootPost() {
   }
 }
 
-void handleWebServer(){
-  if( g_pHttpd ){
-    g_pHttpd->handleClient();
+void WebConfig::handleWebServer()
+{
+  if( mpHttpd ){
+    mpHttpd->handleClient();
   }
 }

@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2016 hidenorly
+ Copyright (C) 2016, 2019 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,7 +17,20 @@
 #ifndef __WEBCONFIG_H__
 #define __WEBCONFIG_H__
 
-void setup_httpd();
-void handleWebServer();
+#include <WebServer.h>
+
+class WebConfig
+{
+public:
+	static void setup_httpd(void);
+	static void handleWebServer(void);
+
+protected:
+	static void httpd_handleRootGet(void);
+	static void httpd_handleRootPost(void);
+
+	static WebServer* mpHttpd; // http server for WiFi AP Mode
+	static const char* const HTML_TAIL;
+};
 
 #endif // __WEBCONFIG_H__
