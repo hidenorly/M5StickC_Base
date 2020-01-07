@@ -1,6 +1,6 @@
-# M5StickC_NTPSwitch
+# M5StickC_Base
 
-This is PIR Human detection based switch for M5StickC with WiFi AP & NTP,  PIR Sensor for M5StickC, Infrared LED.
+This is IoT Framework for M5StickC with WiFi AP & NTP,  PIR Sensor for M5StickC, Infrared LED and MPU6886 or SH200Q sensors.
 
 This supports
  * Turn ON through Ir Remote Transmiter while human is detected.
@@ -11,6 +11,7 @@ This supports
  * For improving availability, sending Ir few times (the count is configurable)
  * Show NTP synced time
  * WebConfig
+ * Sensor (MPU6886 or SH200Q)
 
 # HW Config
 
