@@ -73,10 +73,7 @@ int i2c_send_multiple_data(uint8_t i2cBusChannel, int8_t slaveAddress, uint8_t c
 
 int i2c_send_byte(uint8_t i2cBusChannel, uint8_t slaveAddress, uint8_t cmd, const uint8_t sendData)
 {
-	uint8_t buf[2];
-	buf[0] = cmd;
-	buf[1] = sendData;
-	return i2c_send_multiple_data(i2cBusChannel, slaveAddress, cmd, buf, 2);
+	return i2c_send_multiple_data(i2cBusChannel, slaveAddress, cmd, &sendData, 1);
 }
 
 int i2c_recv_multiple_data(uint8_t i2cBusChannel, uint8_t slaveAddress, uint8_t cmd, uint8_t *receive_buf, size_t receive_buf_len)
