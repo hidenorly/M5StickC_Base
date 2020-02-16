@@ -19,8 +19,6 @@
 
 #include "pal_i2c.h"
 
-#define ENABLE_MPU6886_I2C_DEBUG 0
-
 int MPU6886_i2c_send_data(uint8_t cmd, size_t send_buf_len, const uint8_t *send_buf)
 {
 	return i2c_send_multiple_data(MPU6886_I2C_BUS, MPU6886_I2C_SLA, cmd, send_buf, send_buf_len);

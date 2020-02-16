@@ -24,9 +24,13 @@
 #include "PowerControlPoller.h"
 
 #include "WiFiUtil.h"
+#include "NtpUtil.h"
 #include "WebConfig.h"
+#include "WatchDog.h"
 #include <SPIFFS.h>
 #include <WiFi.h>
+
+#define ENABLE_YMD 0
 
 // --- mode changer
 bool initializeProperMode(bool bSPIFFS){
@@ -43,6 +47,19 @@ bool initializeProperMode(bool bSPIFFS){
   return true;
 }
 
+#if ENABLE_YMD
+  #define DEFAULT_DISP_SIZE 4
+#else
+  #define DEFAULT_DISP_SIZE 5
+#endif
+
+class DispManager
+{
+public:
+  static void showTentativeText(const char* text, int sx=20, int sy=16, int textSize=7);
+  static void showDateClock(const char* text, int sx=4, int sy=20, int textSize=DEFAULT_DISP_SIZE);
+};
+
 // --- handler for WiFi client enabled
 class MyNetHandler
 {
@@ -52,66 +69,60 @@ class MyNetHandler
       DEBUG_PRINT("IP address: ");
       DEBUG_PRINTLN(WiFi.localIP());
 
-      WebConfig::setup_httpd();  // comment this out if you don't need to have httpd on WiFi client mode
-      configTime(NTP_TIMEZONE_OFFSET * 3600L, 0, NTP_SERVER);
+      WebConfig::setup_httpd();
+      NtpUtil::sync();
+      if( NtpUtil::isTimeValid() ){
+        delay(100);
+        WiFiUtil::disconnect();
+      }
     }
 
   public:
     static void setup(void)
     {
+      NtpUtil::loadConfig();
       WiFiUtil::setStatusCallback(onWiFiClientConnected, NULL);
     }
 };
 
-
-class SwitchBtnPoller:public LooperThreadTicker
-{
-  protected:
-    PowerControl* mpPowerControl;
-
-  public:
-    SwitchBtnPoller(PowerControl* pPowerControl=NULL, int dutyMSec=100):LooperThreadTicker(NULL, NULL, dutyMSec),mpPowerControl(pPowerControl){
-    }
-    virtual ~SwitchBtnPoller(){
-    }
-
-    void doCallback(void){
-      static bool bLastPowerStatus = mpPowerControl->getPowerStatus();
-      M5.update();
-      if ( M5.BtnA.wasPressed() ) {
-        mpPowerControl->setPower(!mpPowerControl->getPowerStatus());
-      }
-      bool curPowerStatus = mpPowerControl->getPowerStatus();
-      if(bLastPowerStatus != curPowerStatus){
-        M5.Lcd.fillScreen(BLACK);
-        M5.Lcd.setCursor(0, 8);
-        M5.Lcd.setTextSize(7);
-        M5.Lcd.print(curPowerStatus ? "ON" : "OFF");
-        bLastPowerStatus = curPowerStatus;
-      }
-    }
- };
-
-
 class TimePoller:public LooperThreadTicker
 {
+  protected:
+    static unsigned long mPendingStartTime;
+    const unsigned long PENDING_TIME = 1000 * 5; // 5sec
+
   public:
-    TimePoller(int dutyMSec=0):LooperThreadTicker(NULL, NULL, dutyMSec){
+    TimePoller(int dutyMSec=0):LooperThreadTicker(NULL, NULL, dutyMSec)
+    {
+    }
+
+    static void pendingShow(void)
+    {
+      mPendingStartTime = millis();
     }
 
   protected:
     const int NTP_SYNC_DURATION = 60*60;            // 1 hour
     const int NTP_SYNC_DURATION_NOT_SYNCED = 60*3;  // 3min
 
-    void syncTime(bool bRapidSynced){
+    void syncTime(void)
+    {
       static int i=0;
       i++;
-      if(i % (bRapidSynced ? NTP_SYNC_DURATION_NOT_SYNCED : NTP_SYNC_DURATION) == 0){
-        configTime(NTP_TIMEZONE_OFFSET * 3600L, 0, NTP_SERVER);
+      if(i % (NtpUtil::isTimeValid() ? NTP_SYNC_DURATION : NTP_SYNC_DURATION_NOT_SYNCED ) == 0){
+        if(WiFiUtil::getMode() == WIFI_OFF){
+          WiFiUtil::setupWiFiClient();
+        } else {
+          NtpUtil::sync();
+          if( NtpUtil::isTimeValid() ){
+            WiFiUtil::disconnect();
+          }
+        }
       }
     }
 
-    virtual void doCallback(void){
+    virtual void doCallback(void)
+    {
       struct tm timeInfo;
       char s[20];
       static String lastMessage;
@@ -125,19 +136,23 @@ class TimePoller:public LooperThreadTicker
       DEBUG_PRINTLN(s);
 
       // setup message for LCD
+#if ENABLE_YMD
       sprintf(s, " %02d/%02d\n %02d:%02d",
               timeInfo.tm_mon + 1, timeInfo.tm_mday,
               timeInfo.tm_hour, timeInfo.tm_min);
-      if( !lastMessage.equals(s) ){
+#else // ENABLE_YMD
+      sprintf(s, "%02d:%02d",
+              timeInfo.tm_hour, timeInfo.tm_min);
+#endif // ENABLE_YMD
+
+      if( (!mPendingStartTime && !lastMessage.equals(s)) || ( mPendingStartTime && ((millis()-mPendingStartTime) > PENDING_TIME)) ){
         lastMessage = s;
-        M5.Lcd.fillScreen(BLACK);
-        M5.Lcd.setCursor(0, 8);
-        M5.Lcd.setTextSize(4);
-        M5.Lcd.print(s);
+        mPendingStartTime = 0;
+        DispManager::showDateClock(s);
       }
 
-      syncTime( (timeInfo.tm_year==1970) );
-    }
+      syncTime();
+  }
 };
 
 #include "IMU.h"
@@ -177,6 +192,72 @@ class SensorPoller:public LooperThreadTicker
     } 
 };
 
+unsigned long TimePoller::mPendingStartTime = 0;
+
+typedef void (*BTN_CALLBACK_FUNC)(void*);
+
+
+class SwitchBtnPoller:public LooperThreadTicker
+{
+  protected:
+    BTN_CALLBACK_FUNC mpFunc;
+    void* mpArg;
+
+  public:
+    SwitchBtnPoller(int dutyMSec=100, BTN_CALLBACK_FUNC pFunc=NULL, void* pArg=NULL):LooperThreadTicker(NULL, NULL, dutyMSec),mpFunc(pFunc),mpArg(pArg)
+    {
+    }
+    virtual ~SwitchBtnPoller(){
+    }
+
+    void doCallback(void)
+    {
+      M5.update();
+      if ( M5.BtnA.wasPressed() ) {
+        if(mpFunc){
+          mpFunc(mpArg);
+        }
+      }
+    }
+};
+
+typedef struct buttonArg
+{
+  PowerControl* pPowerControl;
+  PowerControlPoller* pPowerControllerPoller;
+} BUTTON_ARG;
+
+void doButtonPressedHandler(void* pArg)
+{
+  BUTTON_ARG* pButtonArg = reinterpret_cast<BUTTON_ARG*>(pArg);
+  if(pButtonArg && pButtonArg->pPowerControl && pButtonArg->pPowerControllerPoller){
+    pButtonArg->pPowerControl->setPower(!pButtonArg->pPowerControl->getPowerStatus());
+    bool curPowerStatus = pButtonArg->pPowerControl->getPowerStatus();
+
+    DispManager::showTentativeText(curPowerStatus ? "ON" : "OFF");
+    TimePoller::pendingShow();
+
+    pButtonArg->pPowerControllerPoller->notifyManualOperation(curPowerStatus);
+  }
+}
+
+void DispManager::showTentativeText(const char* text, int sx, int sy, int textSize)
+{
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(sx, sy);
+  M5.Lcd.setTextSize(textSize);
+  M5.Lcd.print(text);
+
+  TimePoller::pendingShow(); // TODO : the implementation will be moved from TimePoller
+}
+
+void DispManager::showDateClock(const char* text, int sx, int sy, int textSize)
+{
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(sx, sy);
+  M5.Lcd.setTextSize(textSize);
+  M5.Lcd.print(text);
+}
 
 // --- General setup() function
 void setup() {
@@ -203,10 +284,8 @@ void setup() {
     g_LooperThreadManager.add(sPoll);
   }
 
-  // Initialize WiFi network poller
   MyNetHandler::setup();
 
-  // Initialize PIR Switch poller
   static GpioDetector humanDetector(HUMAN_DETCTOR_PIN, true, HUMAN_UNDETECT_TIMEOUT);
   static IrRemoteController remoteController(IR_SEND_PIN, KEYIrCodes);
   static PowerControl powerControl(&remoteController); // defined in config.cpp
@@ -215,8 +294,11 @@ void setup() {
     g_LooperThreadManager.add(pPowerControllerPoller);
   }
 
-  // Initialize Switch Button Poller
-  SwitchBtnPoller* pSwitchBtnPoller = new SwitchBtnPoller(&powerControl, BTN_POLLING_PERIOD);
+  static BUTTON_ARG arg;
+  arg.pPowerControl = &powerControl;
+  arg.pPowerControllerPoller = pPowerControllerPoller;
+
+  SwitchBtnPoller* pSwitchBtnPoller = new SwitchBtnPoller(BTN_POLLING_PERIOD, doButtonPressedHandler, (void*)&arg);
   if(pSwitchBtnPoller){
     g_LooperThreadManager.add(pSwitchBtnPoller);
   }
@@ -226,11 +308,16 @@ void setup() {
   if(pSensorPoller){
     g_LooperThreadManager.add(pSensorPoller);
   }
+
+  WatchDog::enable();
+  HeapWatchDog::enable();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // put your main code here, to run repeatedly
   WiFiUtil::handleWiFiClientStatus();
   WebConfig::handleWebServer();
   g_LooperThreadManager.handleLooperThread();
+  WatchDog::heartBeat();
+  HeapWatchDog::check();
 }

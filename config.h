@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2016,2018,2019 hidenorly
+ Copyright (C) 2016,2018,2019,2020 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ extern const char* WIFI_CONFIG;
 extern const char* WIFIAP_PASSWORD;
 
 // --- config: NTP
-extern const char* NTP_SERVER;
-extern const int NTP_TIMEZONE_OFFSET;
+extern const char* NTP_CONFIG;
+#define NTP_DEFAULT_SERVER "ntp.nict.jp"
+#define NTP_DEFAULT_TIMEZONE_OFFSET 9
 
 // --- config: httpd
 extern int HTTP_SERVER_PORT;
@@ -42,6 +43,8 @@ extern const int BTN_POLLING_PERIOD;
 extern KEYIRCODE KEYIrCodes[];
 
 void initializeGPIO(void);
+
+#define MANUAL_OPERATION_TIMEOUT (1000*15)	// 15sec
 
 
 #endif // __CONFIG_H__

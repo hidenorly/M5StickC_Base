@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2019 hidenorly
+ Copyright (C) 2019,2020 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #include "PowerControl.h"
 #include "GpioDetector.h"
 #include "config.h"
-
+ 
 class PowerControlPoller:public LooperThreadTicker
 {
   public:
@@ -30,11 +30,14 @@ class PowerControlPoller:public LooperThreadTicker
     virtual ~PowerControlPoller();
 
     virtual void doCallback(void);
+    void notifyManualOperation(bool bOn);
 
 protected:
 	PowerControl* mpPowerControl;
 	GpioDetector* mpHumanDetector;
 	int mHumanTimeout;
+	unsigned long mManualOperationRequestedTime;
+	bool mbManualOperationPowerRequest;
 };
 
 #endif /* __POWER_CONTROL_POLLER_H__ */

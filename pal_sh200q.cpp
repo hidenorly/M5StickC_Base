@@ -20,9 +20,6 @@
 #include "pal_i2c.h"
 
 
-#define ENABLE_MPU6886_I2C_DEBUG 0
-
-
 int SH200Q_i2c_send_data(uint8_t cmd, size_t send_buf_len, const uint8_t *send_buf)
 {
 	return i2c_send_multiple_data(SH200Q_I2C_BUS, SH200Q_I2C_SLA, cmd, send_buf, send_buf_len);
