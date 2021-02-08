@@ -177,15 +177,19 @@ class SensorPoller:public LooperThreadTicker
       float pitch = 0.0f;
       float roll  = 0.0f;
       float yaw   = 0.0f;
+      float temp = 0.0f;
 
       IMU_getAccelData(&accX, &accY, &accZ);
       IMU_getGyroData(&gyroX, &gyroY, &gyroZ);
       IMU_getAhrsData(&pitch, &roll, &yaw);
+      IMU_getTemperature(&temp);
 
       char buf[64];
       snprintf(buf, sizeof(buf), "a:%6.2f,%6.2f,%6.2f", accX, accY, accZ);
       DEBUG_PRINTLN(buf);
       snprintf(buf, sizeof(buf), "g:%6.2f,%6.2f,%6.2f", gyroX, gyroY, gyroZ);
+      DEBUG_PRINTLN(buf);
+      snprintf(buf, sizeof(buf), "temp:%3.2f C", temp);
       DEBUG_PRINTLN(buf);
 //      snprintf(buf, sizeof(buf), "h:%6.2f,%6.2f,%6.2f", pitch, roll, yaw);
 //      DEBUG_PRINTLN(buf);

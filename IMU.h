@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2019, 2020 hidenorly
+ Copyright (C) 2019, 2020, 2021 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -37,5 +37,6 @@ int IMU_Init(void);
 void IMU_getGyroData(float* gyroX, float* gyroY, float* gyroZ);
 void IMU_getAccelData(float* accelX, float* accelY, float* accelZ);
 void IMU_getAhrsData(float* pitch, float* roll, float* yaw);
+void IMU_getTemperature(float* temp);
 
 #endif // __PAL_SENSOR_MPU6886_H__

@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2019, 2020 hidenorly
+ Copyright (C) 2019, 2020, 2021 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -131,4 +131,13 @@ void MPU6886_getAccelData(float* accelX, float* accelY, float* accelZ)
 void MPU6886_getAhrsData(float* pitch, float* roll, float* yaw)
 {
 
+}
+
+#define ROOM_OFFSET 0 // (25)
+
+void MPU6886_getTemperature(float* temp)
+{
+	uint8_t tempLow = MPU6886_i2c_recv_byte(MPU6886_TEMP_OUT_L);
+	uint8_t tempHigh = MPU6886_i2c_recv_byte(MPU6886_TEMP_OUT_H);
+	*temp = ( (float)((tempHigh << 8) + tempLow) / 326.8f ) + ROOM_OFFSET;
 }

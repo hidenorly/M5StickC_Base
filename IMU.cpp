@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2019, 2020 hidenorly
+ Copyright (C) 2019, 2020, 2021 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -76,3 +76,14 @@ void IMU_getAhrsData(float* pitch, float* roll, float* yaw)
 		default:;
 	}
 }
+
+void IMU_getTemperature(float* temp)
+{
+	switch(IMU_TYPE){
+		case IMU_MPU6886:
+			MPU6886_getTemperature(temp);
+			break;
+		default:;
+	}
+}
+

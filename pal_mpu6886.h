@@ -1,5 +1,5 @@
 /* 
- Copyright (C) 2019, 2020 hidenorly
+ Copyright (C) 2019, 2020, 2021 hidenorly
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ int MPU6886_Init(void);
 void MPU6886_getGyroData(float* gyroX, float* gyroY, float* gyroZ);
 void MPU6886_getAccelData(float* accelX, float* accelY, float* accelZ);
 void MPU6886_getAhrsData(float* pitch, float* roll, float* yaw);
+void MPU6886_getTemperature(float* temp);
 
 // board config
 #define MPU6886_I2C_BUS		I2C_BUS_CHANNEL_1    // iic0
